@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hollywood Communications — AI Answering Service</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dim: #8A6F32;
+    --black: #080808;
+    --deep: #0D0D0D;
+    --surface: #131313;
+    --surface2: #1A1A1A;
+    --white: #F5F0E8;
+    --muted: #7A7570;
+    --accent: #C9A84C;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease, background 0.3s ease;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(201,168,76,0.5);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.18s ease;
+  }
+  body:hover .cursor { opacity: 1; }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.022;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 900;
+    padding: 28px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.95) 0%, transparent 100%);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--white); font-weight: 400; }
+  .nav-links { display: flex; gap: 40px; align-items: center; }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--black) !important;
+    background: var(--gold);
+    padding: 10px 24px;
+    text-decoration: none;
+    transition: background 0.3s, transform 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--gold-light) !important; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 140px 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(201,168,76,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, rgba(201,168,76,0.04) 0%, transparent 60%),
+      linear-gradient(180deg, #080808 0%, #0a0907 100%);
+  }
+  .hero-line {
+    position: absolute;
+    top: 0; bottom: 0; left: 58%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.15) 30%, rgba(201,168,76,0.15) 70%, transparent);
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 780px; }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 30px; height: 1px;
+    background: var(--gold);
+    vertical-align: middle;
+    margin-right: 12px;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.2rem, 7vw, 6.5rem);
+    font-weight: 900;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.9s ease 0.35s forwards;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  .hero-subtitle {
+    font-size: 1.15rem;
+    color: rgba(245,240,232,0.6);
+    line-height: 1.7;
+    max-width: 520px;
+    margin-bottom: 52px;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.9s ease 0.5s forwards;
+  }
+  .hero-actions {
+    display: flex; gap: 20px; align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.9s ease 0.65s forwards;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    padding: 16px 36px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,168,76,0.25); }
+  .btn-secondary {
+    color: var(--white);
+    padding: 16px 36px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid rgba(245,240,232,0.2);
+    transition: all 0.3s;
+  }
+  .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+  .hero-stat-row {
+    position: absolute;
+    bottom: 60px; right: 60px;
+    display: flex; gap: 50px;
+    opacity: 0;
+    animation: fadeUp 0.9s ease 0.8s forwards;
+  }
+  .hero-stat { text-align: right; }
+  .hero-stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* MARQUEE */
+  .marquee-wrap {
+    border-top: 1px solid rgba(201,168,76,0.15);
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+    padding: 18px 0;
+    overflow: hidden;
+    background: rgba(201,168,76,0.03);
+  }
+  .marquee-track {
+    display: flex; gap: 60px;
+    animation: marquee 22s linear infinite;
+    width: max-content;
+  }
+  .marquee-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 60px;
+  }
+  .marquee-item::after {
+    content: '◆';
+    color: var(--gold);
+    font-size: 0.5rem;
+  }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* SECTION DEFAULTS */
+  section { padding: 120px 60px; }
+  .section-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-tag::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--gold);
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+  .section-body {
+    font-size: 1.05rem;
+    color: rgba(245,240,232,0.55);
+    line-height: 1.75;
+    max-width: 560px;
+  }
+
+  /* HOW IT WORKS */
+  .how { background: var(--deep); }
+  .how-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items: center; max-width: 1200px; margin: 0 auto; }
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex; gap: 32px;
+    padding: 36px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    transition: all 0.3s;
+  }
+  .step:first-child { padding-top: 0; }
+  .step:last-child { border-bottom: none; }
+  .step:hover .step-num { color: var(--gold); border-color: var(--gold); }
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: rgba(201,168,76,0.3);
+    border: 1px solid rgba(201,168,76,0.2);
+    width: 52px; height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .step-text h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .step-text p {
+    font-size: 0.9rem;
+    color: rgba(245,240,232,0.5);
+    line-height: 1.65;
+  }
+  .how-visual {
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,0.12);
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .how-visual::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08), transparent 70%);
+  }
+  .call-mockup { position: relative; z-index: 2; }
+  .call-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .call-pulse {
+    width: 8px; height: 8px;
+    background: #4CAF7C;
+    border-radius: 50%;
+    animation: pulse 1.5s ease infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
+  .call-bubble {
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    max-width: 85%;
+  }
+  .call-bubble.caller {
+    background: rgba(255,255,255,0.06);
+    border-radius: 0 12px 12px 12px;
+    color: rgba(245,240,232,0.75);
+  }
+  .call-bubble.ai {
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px 12px 0 12px;
+    margin-left: auto;
+    color: var(--white);
+  }
+  .call-bubble.ai .ai-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .call-action {
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: rgba(76,175,124,0.08);
+    border: 1px solid rgba(76,175,124,0.2);
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: #4CAF7C;
+  }
+
+  /* FEATURES */
+  .features { background: var(--black); }
+  .features-header { max-width: 600px; margin-bottom: 72px; }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: rgba(201,168,76,0.1);
+    max-width: 1200px;
+  }
+  .feature-card {
+    background: var(--black);
+    padding: 48px 40px;
+    transition: background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card:hover { background: var(--surface); }
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+    transform-origin: left;
+  }
+  .feature-card:hover::after { transform: scaleX(1); }
+  .feature-icon {
+    font-size: 1.6rem;
+    margin-bottom: 24px;
+    display: block;
+  }
+  .feature-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .feature-card p {
+    font-size: 0.88rem;
+    color: rgba(245,240,232,0.5);
+    line-height: 1.7;
+  }
+
+  /* INDUSTRIES */
+  .industries {
+    background: var(--surface);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+  }
+  .industries-inner { max-width: 1200px; margin: 0 auto; }
+  .industries-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+  }
+  .industry-card {
+    padding: 36px 28px;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .industry-card:hover {
+    border-color: rgba(201,168,76,0.4);
+    transform: translateY(-4px);
+  }
+  .industry-icon { font-size: 2rem; margin-bottom: 16px; }
+  .industry-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .industry-card p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* PRICING */
+  .pricing { background: var(--black); }
+  .pricing-header { text-align: center; margin-bottom: 72px; }
+  .pricing-header .section-tag { justify-content: center; }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    background: rgba(201,168,76,0.08);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .price-card {
+    background: var(--black);
+    padding: 48px 36px;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .price-card.featured {
+    background: var(--surface2);
+  }
+  .price-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute;
+    top: -1px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--black);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    padding: 5px 16px;
+    white-space: nowrap;
+  }
+  .price-plan {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+  }
+  .price-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.2rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .price-amount sup { font-size: 1.4rem; vertical-align: top; margin-top: 10px; display: inline-block; }
+  .price-period {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+  .price-features {
+    list-style: none;
+    margin-bottom: 40px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .price-features li {
+    font-size: 0.85rem;
+    color: rgba(245,240,232,0.65);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .price-features li::before {
+    content: '—';
+    color: var(--gold);
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .price-btn {
+    display: block;
+    text-align: center;
+    padding: 13px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid rgba(201,168,76,0.4);
+    color: var(--gold);
+    transition: all 0.3s;
+  }
+  .price-btn:hover, .price-card.featured .price-btn {
+    background: var(--gold);
+    color: var(--black);
+    border-color: var(--gold);
+  }
+
+  /* TESTIMONIALS */
+  .testimonials { background: var(--deep); overflow: hidden; }
+  .test-inner { max-width: 1200px; margin: 0 auto; }
+  .test-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 64px; }
+  .test-card {
+    padding: 40px 36px;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .test-card::before {
+    content: '\201C';
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem;
+    color: rgba(201,168,76,0.15);
+    position: absolute;
+    top: 20px; left: 28px;
+    line-height: 1;
+  }
+  .test-text {
+    font-size: 0.92rem;
+    color: rgba(245,240,232,0.7);
+    line-height: 1.75;
+    margin-bottom: 28px;
+    position: relative; z-index: 1;
+    padding-top: 28px;
+  }
+  .test-author { display: flex; align-items: center; gap: 14px; }
+  .test-avatar {
+    width: 42px; height: 42px;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  .test-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .test-biz {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* CTA */
+  .cta-section {
+    background: var(--surface);
+    text-align: center;
+    padding: 140px 60px;
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid rgba(201,168,76,0.1);
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-section .section-tag { justify-content: center; }
+  .cta-section .section-title { max-width: 700px; margin: 0 auto 20px; }
+  .cta-section .section-body { margin: 0 auto 52px; text-align: center; }
+  .cta-actions { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+  /* FOOTER */
+  footer {
+    background: var(--black);
+    border-top: 1px solid rgba(201,168,76,0.12);
+    padding: 60px 60px 40px;
+  }
+  .footer-inner {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px; margin-bottom: 60px;
+  }
+  .footer-brand .nav-logo { font-size: 1.3rem; display: block; margin-bottom: 16px; }
+  .footer-brand p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 280px;
+  }
+  .footer-col h4 {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul a {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .footer-col ul a:hover { color: var(--white); }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 28px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-bottom p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .footer-bottom .gold { color: var(--gold); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+
+  @media (max-width: 900px) {
+    nav { padding: 24px 24px; }
+    .nav-links { display: none; }
+    section { padding: 80px 24px; }
+    .hero { padding: 120px 24px 60px; }
+    .hero-stat-row { position: static; margin-top: 60px; justify-content: flex-start; }
+    .how-inner { grid-template-columns: 1fr; gap: 60px; }
+    .features-grid { grid-template-columns: 1fr 1fr; }
+    .industries-grid { grid-template-columns: 1fr 1fr; }
+    .pricing-grid { grid-template-columns: 1fr 1fr; }
+    .test-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr 1fr; gap: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Hollywood<span> Communications</span></a>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#industries">Industries</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#contact" class="nav-cta">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-line"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">AI-Powered Answering Service</p>
+    <h1 class="hero-title">
+      Every Call.<br>
+      <em>Answered.</em><br>
+      Always.
+    </h1>
+    <p class="hero-subtitle">
+      Hollywood Communications gives your business a 24/7 AI operator that answers calls, books appointments, qualifies leads, and handles every task — flawlessly.
+    </p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn-primary">Start Free Trial →</a>
+      <a href="#how" class="btn-secondary">See How It Works</a>
+    </div>
+  </div>
+  <div class="hero-stat-row">
+    <div class="hero-stat">
+      <div class="hero-stat-num">24/7</div>
+      <div class="hero-stat-label">Always Live</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">0</div>
+      <div class="hero-stat-label">Missed Calls</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">90%</div>
+      <div class="hero-stat-label">Cost Savings</div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="marquee-item">24/7 Call Answering</div>
+    <div class="marquee-item">Appointment Booking</div>
+    <div class="marquee-item">Lead Qualification</div>
+    <div class="marquee-item">Call Transfer</div>
+    <div class="marquee-item">SMS Follow-Up</div>
+    <div class="marquee-item">CRM Integration</div>
+    <div class="marquee-item">Voice Cloning</div>
+    <div class="marquee-item">Multilingual Support</div>
+    <div class="marquee-item">Call Transcripts</div>
+    <div class="marquee-item">Spam Filtering</div>
+    <div class="marquee-item">24/7 Call Answering</div>
+    <div class="marquee-item">Appointment Booking</div>
+    <div class="marquee-item">Lead Qualification</div>
+    <div class="marquee-item">Call Transfer</div>
+    <div class="marquee-item">SMS Follow-Up</div>
+    <div class="marquee-item">CRM Integration</div>
+    <div class="marquee-item">Voice Cloning</div>
+    <div class="marquee-item">Multilingual Support</div>
+    <div class="marquee-item">Call Transcripts</div>
+    <div class="marquee-item">Spam Filtering</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <div>
+      <div class="section-tag reveal">How It Works</div>
+      <h2 class="section-title reveal">Up &amp; running<br>in <em>under an hour</em></h2>
+      <p class="section-body reveal">Forward your number, tell us about your business, and your AI operator is live — fielding calls like a seasoned professional.</p>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div class="step-text">
+            <h3>Forward Your Number</h3>
+            <p>No new hardware. No new number required. Simply forward your existing business line to Hollywood Communications — full or conditional.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <div class="step-text">
+            <h3>Train Your AI Operator</h3>
+            <p>We scan your website and business info. You confirm details, add FAQs, and customize your AI's voice, greeting, and tasks in minutes.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <div class="step-text">
+            <h3>Go Live Today</h3>
+            <p>Your AI answers every call instantly — books appointments, captures leads, routes urgent calls, and sends you full transcripts after each one.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">04</div>
+          <div class="step-text">
+            <h3>Monitor &amp; Optimize</h3>
+            <p>View every call, transcript, and outcome in your dashboard. Tune your AI anytime to improve responses and capture more business.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="how-visual reveal">
+      <div class="call-mockup">
+        <div class="call-header">
+          <div class="call-pulse"></div>
+          Live Call — Hollywood Communications AI
+        </div>
+        <div class="call-bubble caller">
+          Hi, I'd like to book an appointment for Saturday morning if you have anything available?
+        </div>
+        <div class="call-bubble ai">
+          <span class="ai-tag">Hollywood Comms AI</span>
+          Absolutely! I have Saturday at 9:00 AM and 11:30 AM available. Which works best for you? And may I get your name and best callback number?
+        </div>
+        <div class="call-bubble caller">
+          9 AM works perfectly. It's Marcus, 310-555-0192.
+        </div>
+        <div class="call-bubble ai">
+          <span class="ai-tag">Hollywood Comms AI</span>
+          Perfect, Marcus! You're booked for Saturday at 9:00 AM. I'll send a confirmation text right now. Is there anything else I can help you with today?
+        </div>
+        <div class="call-action">
+          ✓ Appointment booked · Confirmation SMS sent · Lead captured
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-header reveal">
+    <div class="section-tag">What We Do</div>
+    <h2 class="section-title">Everything your<br>front desk <em>should</em> do</h2>
+    <p class="section-body">A complete AI operator — not just a voice bot. Hollywood Communications handles the full lifecycle of every caller.</p>
+  </div>
+  <div class="features-grid reveal">
+    <div class="feature-card">
+      <span class="feature-icon">📞</span>
+      <h3>24/7 Call Answering</h3>
+      <p>Your AI operator never sleeps, never takes lunch, never calls in sick. Every call answered on the first ring, every single time.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📅</span>
+      <h3>Appointment Booking</h3>
+      <p>Integrates with Google Calendar, Outlook, Calendly, and your CRM. Books real-time slots directly during the call.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎯</span>
+      <h3>Lead Qualification</h3>
+      <p>Collects caller info, asks the right questions, and scores leads automatically — so you always know who to call back first.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔄</span>
+      <h3>Smart Call Transfer</h3>
+      <p>Detects urgency and emotion. Routes critical calls to the right human instantly with a full briefing before they pick up.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💬</span>
+      <h3>SMS Follow-Up</h3>
+      <p>Sends confirmation texts, appointment reminders, booking links, and custom follow-ups automatically after every call.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎙️</span>
+      <h3>Voice Cloning</h3>
+      <p>Your AI can sound exactly like your brand — or a custom voice you choose. Callers often don't realize they're talking to AI.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📝</span>
+      <h3>Full Transcripts</h3>
+      <p>Every call is recorded and transcribed. Searchable logs, call summaries, and quality scores delivered to your dashboard.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🌐</span>
+      <h3>Multilingual Support</h3>
+      <p>Serves callers in English, Spanish, and more. Reach every customer in the language they're most comfortable with.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📊</span>
+      <h3>Analytics Dashboard</h3>
+      <p>Real-time insights on call volume, conversion rates, missed-call recovery, booking rates, and peak hours.</p>
+    </div>
+  </div>
+</section>
+
+<!-- INDUSTRIES -->
+<section class="industries" id="industries">
+  <div class="industries-inner">
+    <div class="section-tag reveal">Industries We Serve</div>
+    <h2 class="section-title reveal">Built for businesses<br>that <em>can't miss a call</em></h2>
+    <div class="industries-grid">
+      <div class="industry-card reveal">
+        <div class="industry-icon">🏠</div>
+        <h3>Home Services</h3>
+        <p>Plumbers, HVAC, electricians, landscapers — capture every service call 24/7.</p>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">🏥</div>
+        <h3>Healthcare</h3>
+        <p>Book patient appointments, handle after-hours, HIPAA-compliant handling.</p>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">🏡</div>
+        <h3>Real Estate</h3>
+        <p>Qualify buyer and seller leads instantly. Never lose a hot lead to voicemail.</p>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">⚖️</div>
+        <h3>Legal Offices</h3>
+        <p>Intake calls professionally, capture case details, and schedule consultations.</p>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">💇</div>
+        <h3>Salons &amp; Spas</h3>
+        <p>Book appointments around the clock without putting clients on hold.</p>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">🚗</div>
+        <h3>Auto Services</h3>
+        <p>Schedule service bays, handle recalls, and capture new customer info effortlessly.</p>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">🍽️</div>
+        <h3>Restaurants</h3>
+        <p>Take reservations, answer menu questions, handle the Friday night rush with ease.</p>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">🏢</div>
+        <h3>Any Business</h3>
+        <p>If your phone rings, Hollywood Communications can handle it — any industry, any size.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-header reveal">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-title">Flat rate. No per-minute<br><em>surprises.</em></h2>
+    <p class="section-body" style="margin:0 auto;">One simple monthly fee covers unlimited calls. No contracts, no setup fees, cancel anytime.</p>
+  </div>
+  <div class="pricing-grid reveal">
+    <div class="price-card">
+      <div class="price-plan">Starter</div>
+      <div class="price-amount"><sup>$</sup>79</div>
+      <div class="price-period">per month · unlimited calls</div>
+      <ul class="price-features">
+        <li>24/7 AI call answering</li>
+        <li>Appointment booking</li>
+        <li>Call transcripts & recordings</li>
+        <li>SMS notifications</li>
+        <li>1 business location</li>
+      </ul>
+      <a href="#contact" class="price-btn">Get Started</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-plan">Professional</div>
+      <div class="price-amount"><sup>$</sup>149</div>
+      <div class="price-period">per month · unlimited calls</div>
+      <ul class="price-features">
+        <li>Everything in Starter</li>
+        <li>CRM & calendar integration</li>
+        <li>Smart call transfer</li>
+        <li>Lead qualification scoring</li>
+        <li>SMS follow-ups & reminders</li>
+        <li>Analytics dashboard</li>
+      </ul>
+      <a href="#contact" class="price-btn">Get Started</a>
+    </div>
+    <div class="price-card">
+      <div class="price-plan">Agency</div>
+      <div class="price-amount"><sup>$</sup>399</div>
+      <div class="price-period">per month · unlimited calls</div>
+      <ul class="price-features">
+        <li>Everything in Professional</li>
+        <li>Voice cloning</li>
+        <li>White-label branding</li>
+        <li>Multi-location support</li>
+        <li>Multilingual AI</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="#contact" class="price-btn">Get Started</a>
+    </div>
+    <div class="price-card">
+      <div class="price-plan">Enterprise</div>
+      <div class="price-amount" style="font-size:2rem;padding-top:10px;">Custom</div>
+      <div class="price-period">tailored to your volume</div>
+      <ul class="price-features">
+        <li>Everything in Agency</li>
+        <li>Dedicated AI agent team</li>
+        <li>Custom integrations</li>
+        <li>SLA guarantee</li>
+        <li>Dedicated account manager</li>
+        <li>Scales to thousands of clients</li>
+      </ul>
+      <a href="#contact" class="price-btn">Contact Sales</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="test-inner">
+    <div class="section-tag reveal">Client Stories</div>
+    <h2 class="section-title reveal">Real businesses.<br><em>Real results.</em></h2>
+    <div class="test-grid">
+      <div class="test-card reveal">
+        <p class="test-text">"We used to lose customers every evening when we closed. Now Hollywood Communications handles everything after hours — bookings, questions, the works. Our revenue is up 30% in two months."</p>
+        <div class="test-author">
+          <div class="test-avatar">M</div>
+          <div>
+            <div class="test-name">Marcus T.</div>
+            <div class="test-biz">Elite Home Services, Los Angeles</div>
+          </div>
+        </div>
+      </div>
+      <div class="test-card reveal">
+        <p class="test-text">"My competitors call our number and can't believe they're talking to AI. It represents our brand perfectly. I've already referred three other clinics to Hollywood Communications."</p>
+        <div class="test-author">
+          <div class="test-avatar">D</div>
+          <div>
+            <div class="test-name">Dr. Diana V.</div>
+            <div class="test-biz">Vitality Medical Group, Beverly Hills</div>
+          </div>
+        </div>
+      </div>
+      <div class="test-card reveal">
+        <p class="test-text">"As someone who ran a live answering service for 20 years, I switched every one of my locations to Hollywood Communications. Better accuracy, instant response, fraction of the cost."</p>
+        <div class="test-author">
+          <div class="test-avatar">R</div>
+          <div>
+            <div class="test-name">Robert H.</div>
+            <div class="test-biz">Prestige Auto Group, Inglewood</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="section-tag reveal">Get Started Today</div>
+  <h2 class="section-title reveal">Your AI operator is<br><em>ready to go live.</em></h2>
+  <p class="section-body reveal">Join thousands of businesses who stopped missing calls and started growing. Setup takes less than an hour. No contracts.</p>
+  <div class="cta-actions reveal">
+    <a href="#" class="btn-primary">Start Your Free Trial →</a>
+    <a href="#" class="btn-secondary">Schedule a Demo</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="#" class="nav-logo">Hollywood<span> Communications</span></a>
+      <p>The premier AI answering service for businesses that refuse to miss a single opportunity. 24/7. Always live. Always professional.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="#">Features</a></li>
+        <li><a href="#">Pricing</a></li>
+        <li><a href="#">Industries</a></li>
+        <li><a href="#">Integrations</a></li>
+        <li><a href="#">API Access</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Press</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Setup Guide</a></li>
+        <li><a href="#">Status</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Hollywood Communications. All rights reserved. Built in <span class="gold">Los Angeles, CA</span>.</p>
+    <p>hello@hollywoodcommunications.ai</p>
+  </div>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '18px'; cursor.style.height = '18px';
+      ring.style.width = '52px'; ring.style.height = '52px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '10px'; cursor.style.height = '10px';
+      ring.style.width = '36px'; ring.style.height = '36px';
+    });
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => obs.observe(el));
+
+  // Counter animation
+  function animateCounter(el, target, suffix) {
+    let start = 0;
+    const step = target / 60;
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { el.textContent = target + suffix; clearInterval(timer); return; }
+      el.textContent = Math.floor(start) + suffix;
+    }, 25);
+  }
+</script>
+</body>
+</html>
